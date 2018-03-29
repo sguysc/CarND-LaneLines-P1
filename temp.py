@@ -12,6 +12,7 @@ import cv2
 import math
 from moviepy.editor import VideoFileClip
 import os
+
 #%matplotlib inline
 
 
@@ -76,8 +77,9 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
     If you want to make the lines semi-transparent, think about combining
     this function with the weighted_img() function below
     """
+    imshape = img.shape
     top=320
-    bottom=540
+    bottom=imshape[0]
     left_x1_vec = []
     left_y1_vec = []
     left_x2_vec = []
@@ -101,30 +103,32 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
                 right_y1_vec.append(y1)
                 right_x2_vec.append(x2)
                 right_y2_vec.append(y2)
-                
-    avg_right_x1 = int(np.mean(right_x1_vec))
-    avg_right_y1 = int(np.mean(right_y1_vec))
-    avg_right_x2 = int(np.mean(right_x2_vec))
-    avg_right_y2 = int(np.mean(right_y2_vec))
-    right_slope = ((avg_right_y2-avg_right_y1)/(avg_right_x2-avg_right_x1))
-    #get all line parameters  y-y0=m(x-x0)
-    right_y1 = top
-    right_x1 = int(avg_right_x1 + (right_y1 - avg_right_y1) / right_slope)
-    right_y2 = bottom
-    right_x2 = int(avg_right_x1 + (right_y2 - avg_right_y1) / right_slope)
-    cv2.line(img, (right_x1, right_y1), (right_x2, right_y2), color, thickness)
-        
-    avg_left_x1 = int(np.mean(left_x1_vec))
-    avg_left_y1 = int(np.mean(left_y1_vec))
-    avg_left_x2 = int(np.mean(left_x2_vec))
-    avg_left_y2 = int(np.mean(left_y2_vec))
-    left_slope = ((avg_left_y2-avg_left_y1)/(avg_left_x2-avg_left_x1))
-    #get all line parameters  y-y0=m(x-x0)
-    left_y1 = top
-    left_x1 = int(avg_left_x1 + (left_y1 - avg_left_y1) / left_slope)
-    left_y2 = bottom
-    left_x2 = int(avg_left_x1 + (left_y2 - avg_left_y1) / left_slope)
-    cv2.line(img, (left_x1, left_y1), (left_x2, left_y2), color, thickness)
+    
+    if len(right_x1_vec)>0:            
+        avg_right_x1 = int(np.mean(right_x1_vec))
+        avg_right_y1 = int(np.mean(right_y1_vec))
+        avg_right_x2 = int(np.mean(right_x2_vec))
+        avg_right_y2 = int(np.mean(right_y2_vec))
+        right_slope = ((avg_right_y2-avg_right_y1)/(avg_right_x2-avg_right_x1))
+        #get all line parameters  y-y0=m(x-x0)
+        right_y1 = top
+        right_x1 = int(avg_right_x1 + (right_y1 - avg_right_y1) / right_slope)
+        right_y2 = bottom
+        right_x2 = int(avg_right_x1 + (right_y2 - avg_right_y1) / right_slope)
+        cv2.line(img, (right_x1, right_y1), (right_x2, right_y2), color, thickness)
+    
+    if len(right_x1_vec)>0:     
+        avg_left_x1 = int(np.mean(left_x1_vec))
+        avg_left_y1 = int(np.mean(left_y1_vec))
+        avg_left_x2 = int(np.mean(left_x2_vec))
+        avg_left_y2 = int(np.mean(left_y2_vec))
+        left_slope = ((avg_left_y2-avg_left_y1)/(avg_left_x2-avg_left_x1))
+        #get all line parameters  y-y0=m(x-x0)
+        left_y1 = top
+        left_x1 = int(avg_left_x1 + (left_y1 - avg_left_y1) / left_slope)
+        left_y2 = bottom
+        left_x2 = int(avg_left_x1 + (left_y2 - avg_left_y1) / left_slope)
+        cv2.line(img, (left_x1, left_y1), (left_x2, left_y2), color, thickness)
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
     """
@@ -134,7 +138,7 @@ def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
     """
     lines = cv2.HoughLinesP(img, rho, theta, threshold, np.array([]), minLineLength=min_line_len, maxLineGap=max_line_gap)
     line_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-    draw_lines(line_img, lines)
+    draw_lines(line_img, lines, thickness=6)
     return line_img
 
 # Python 3 has support for cool math symbols.
@@ -155,16 +159,31 @@ def weighted_img(img, initial_img, α=0.8, β=1., γ=0.):
 
 def process_img(img):
     gray = grayscale(img)
-    blurred = gaussian_blur(gray, kernel_size=5)
-    edges = canny(blurred, low_threshold=50, high_threshold=150)
+    plt.imshow(gray, cmap='gray')
+    mpimg.imsave('test_videos_output/challenge-gray.png', gray)
     
-    imshape = image.shape
-    vertices = np.array([[(0,imshape[0]),(450, 320), (500, 320), (imshape[1],imshape[0])]], dtype=np.int32)
+    blurred = gaussian_blur(gray, kernel_size=5)
+    mpimg.imsave('test_videos_output/challenge-blurred.png', blurred)
+    
+    edges = canny(blurred, low_threshold=50, high_threshold=150)
+    plt.imshow(edges)#, cmap='gray')
+    mpimg.imsave('test_videos_output/challenge-edges.png', edges)
+    
+    imshape = img.shape
+    print('dimensions: ', str(imshape))
+    
+    #vertices = np.array([[(0,imshape[0]),(450, 320), (500, 320), (imshape[1],imshape[0])]], dtype=np.int32)
+    vertices = np.array([[(0,imshape[0]),(imshape[1]/2-50, 320), (imshape[1]/2+50, 320), (imshape[1],imshape[0])]], dtype=np.int32)
     masked_edges = region_of_interest(edges, vertices)
+    plt.imshow(masked_edges)
+    mpimg.imsave('test_videos_output/challenge-masked_edges.png', masked_edges)
 
     lines = hough_lines(masked_edges, rho=2, theta=np.pi/180, threshold=15, min_line_len=40, max_line_gap=20)
-
+    mpimg.imsave('test_videos_output/challenge-lines.png', lines)
+    
     lines_edges = weighted_img(lines, img) 
+    mpimg.imsave('test_videos_output/challenge-lines_edges.png', lines_edges)
+    
     return lines_edges
     #weighted_img(lines, initial_img, α=0.8, β=1., γ=0.)
     
@@ -178,27 +197,32 @@ def process_img(img):
 
 if __name__ == "__main__":
     #reading in an image
-    image = mpimg.imread('test_images/solidWhiteRight.jpg')
+#    image = mpimg.imread('test_images/solidWhiteRight.jpg')
     #printing out some stats and plotting
-    print('This image is:', type(image), 'with dimensions:', image.shape)
-    plt.imshow(image)  # if you wanted to show a single color channel image called 'gray', for example, call as plt.imshow(gray, cmap='gray')
-    lines_edges = process_img(image)
-    plt.imshow(lines_edges)
+#    print('This image is:', type(image), 'with dimensions:', image.shape)
+#    plt.imshow(image)  # if you wanted to show a single color channel image called 'gray', for example, call as plt.imshow(gray, cmap='gray')
+#    lines_edges = process_img(image)
+#    plt.imshow(lines_edges)
     
-    images = os.listdir("test_images/")
-    for img_file in images:
-        #print(img_file)
-        # Skip all files starting with line.
-        if img_file[0:4] == 'line':
-            continue
+#    images = os.listdir("test_images/")
+#    for img_file in images:
+#        #print(img_file)
+#        # Skip all files starting with line.
+#        if img_file[0:4] == 'line':
+#            continue
+#
+#        img = mpimg.imread('test_images/' + img_file)   
+#
+#        weighted = process_img(img)
+#
+#        plt.imshow(weighted)
+#        #break
+#        mpimg.imsave('test_images/lines-' + img_file, weighted)
 
-        img = mpimg.imread('test_images/' + img_file)   
 
-        weighted = process_img(img)
-
-        plt.imshow(weighted)
-        #break
-        mpimg.imsave('test_images/lines-' + img_file, weighted)
-
+    challenge_output = 'test_videos_output/challenge.mp4'
+    clip3 = VideoFileClip('test_videos/challenge.mp4')
+    challenge_clip = clip3.fl_image(process_img)
+    challenge_clip.write_videofile(challenge_output, audio=False)
     #white_output = 'test_videos_output/solidWhiteRight.mp4'
 
