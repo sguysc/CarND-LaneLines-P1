@@ -13,7 +13,7 @@ The goals / steps of this project are the following:
 * Reflect on your work in a written report
 
 
-[//]: # (Image References)
+[//]: # "Image References"
 
 [image1]: ./examples/grayscale.jpg "Grayscale"
 
@@ -23,7 +23,12 @@ The goals / steps of this project are the following:
 
 ### 1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
 
-My pipeline consisted of 5 steps. First, I converted the images to grayscale, then I .... 
+My pipeline consisted of 5 steps. 
+
+1. First, I converted the images to grayscale, then I used Gaussian blur  (with kernel_size=5) to prepare the image for edge detect.
+2. I used canny edge detect on the blurred image with the following thresholds :low_threshold=50, high_threshold=150.
+3. I set the ROI to roughly the lower half of the image (using the region_of_interest function)
+4. 
 
 In order to draw a single line on the left and right lanes, I modified the draw_lines() function by ...
 
